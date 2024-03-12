@@ -1,16 +1,32 @@
-import { ContactShadows, Environment, OrbitControls, useCursor } from "@react-three/drei";
+import { ContactShadows, Environment, Grid, OrbitControls, useCursor } from "@react-three/drei";
 import { AnimatedWoman } from "./AnimatedWoman";
-import { Character, useSocket } from "../contexts/SocketContext";
+import { useSocket } from "../contexts/SocketContext";
 import { useEffect, useState } from "react";
 import * as THREE from 'three';
+import { Item } from "./Items";
+import { ICharacter } from "../utils/interfaces";
+import { useThree } from "@react-three/fiber";
+import { useGrid } from "../hooks/useGrid";
+
 
 export const Experience = () => {
   const socketContext = useSocket();
   const [onFloor, setOnFloor] = useState(false);
   useCursor(onFloor);
+  const {vector3ToGrid, gridToVector3} = useGrid();
+  const scene = useThree((state) => state.scene);
+
+  const onCharacterMove = (e) => {
+    const character = scene.getObjectByName(`character-${socketContext.user}`);
+    if (!character) {
+      return;
+    }
+    socketContext.socket.emit("move", vector3ToGrid(character.position), vector3ToGrid(e.point))
+  }
+
   useEffect(() => {
     if (socketContext.characters.length) {
-      console.log(socketContext.characters);
+      
     }
     
     return () => {
@@ -22,29 +38,34 @@ export const Experience = () => {
     <>
       <Environment preset="sunset"/>
       <ambientLight intensity={0.3} />
-      <ContactShadows blur={2} />
       <OrbitControls />
+      {
+        socketContext.map.items?.map((item, idx) => {
+          return (
+            <Item key={`${item.name}-${idx}`} item={item}/>
+          )
+        })
+      }
       <mesh 
         rotation-x={-Math.PI / 2}
         position-y={-0.001}
-        onClick={(e) => socketContext.socket.emit("move", [e.point.x, 0, e.point.z])}
+        onClick={onCharacterMove}
         onPointerEnter={() => setOnFloor(true)}
         onPointerLeave={() => setOnFloor(false)}
+        position-x={socketContext.map.size?.[0] / 2}
+        position-z={socketContext.map.size?.[1] / 2}
       >
-        <planeGeometry args={[10, 10]}/>
+        <planeGeometry args={[socketContext.map.size?.[0], socketContext.map.size?.[1]]}/>
         <meshStandardMaterial color='#f0f0f0'/>
       </mesh>
+      <Grid infiniteGrid fadeDistance={50} fadeStrength={5} />
       {
-        socketContext.characters.map((character: Character) => (
+        socketContext.characters.map((character: ICharacter) => (
           <AnimatedWoman 
             key={character.id} 
-            position={
-              new THREE.Vector3(
-                character.position[0],
-                character.position[1],
-                character.position[2]
-              )
-            }
+            id={character.id}
+            path={character.path}
+            position={gridToVector3(character.position)}
             hairColor={character.hairColor}
             topColor={character.topColor}
             bottomColor={character.bottomColor}

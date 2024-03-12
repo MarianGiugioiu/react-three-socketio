@@ -8,6 +8,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGLTF, useAnimations } from '@react-three/drei'
 import { GLTF, SkeletonUtils } from 'three-stdlib'
 import { useFrame, useGraph } from '@react-three/fiber'
+import { useSocket } from '../contexts/SocketContext'
+import { useGrid } from '../hooks/useGrid'
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -46,10 +48,23 @@ export function AnimatedWoman({
   hairColor = 'green',
   topColor = 'pink',
   bottomColor = 'brown',
+  id,
   ...props
 }) {
 
   const position = useMemo(() => props.position, []);
+  const [path, setPath] = useState<THREE.Vector3[]>();
+  const { gridToVector3 } = useGrid();
+
+  useEffect(() => {
+    const pathRaw = [];
+    
+    props.path?.forEach((gridPosition) => {
+      pathRaw.push(gridToVector3(gridPosition));
+    });
+    
+    setPath(pathRaw);
+  }, [props.path]);
 
   const group = useRef<THREE.Group>()
   const { scene, materials, animations } = useGLTF('/models/Animated Woman.glb') as GLTFResult
@@ -64,23 +79,33 @@ export function AnimatedWoman({
     return () => actions[animation]?.fadeOut(0.32);
   }, [animation]);
 
-  useFrame(() => {
-    if (group.current.position.distanceTo(props.position) > 0.1) {
+  const socketContext = useSocket();
+
+  useFrame((state) => {
+    if (path?.length && group.current.position.distanceTo(path[0]) > 0.1) {
       const direction = group.current.position
         .clone()
-        .sub(props.position)
+        .sub(path[0])
         .normalize()
         .multiplyScalar(MOVEMENT_SPEED);
       group.current.position.sub(direction);
-      group.current.lookAt(props.position);
+      group.current.lookAt(path[0]);
       setAnimation("CharacterArmature|Run");
+    } else if (path?.length) {
+      path.shift();
     } else {
       setAnimation("CharacterArmature|Idle");
+    }
+    if (id === socketContext.user) {
+      state.camera.position.x = group.current.position.x + 8;
+      state.camera.position.y = group.current.position.y + 8;
+      state.camera.position.z = group.current.position.z + 8;
+      state.camera.lookAt(group.current.position);
     }
   });
   
   return (
-    <group ref={group} {...props} position={position} dispose={null}>
+    <group ref={group} {...props} position={position} dispose={null} name={`character-${id}`}>
       <group name="Root_Scene">
         <group name="RootNode">
           <group name="CharacterArmature" rotation={[-Math.PI / 2, 0, 0]} scale={100}>
