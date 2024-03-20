@@ -10,7 +10,10 @@ export interface ICharacter {
 export interface IItem {
   name: string,
   size: number[],
-  gridPosition?: number[]
+  gridPosition?: number[],
+  rotation?: number,
+  walkable?: boolean,
+  wall?: boolean
 }
 
 export interface IMap {

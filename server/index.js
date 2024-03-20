@@ -169,11 +169,16 @@ const finder = new pathfinding.AStarFinder({
 const findPath = (start, end) => {
   const gridClone = grid.clone();
   const path = finder.findPath(start[0], start[1], end[0], end[1], gridClone);
-  console.log(path);
   return path;
 };
 
 const updateGrid = () => {
+  for (let x = 0; x < map.size[0] * map.gridDivision; x++) {
+    for (let y = 0; y < map.size[1] * map.gridDivision; y++) {
+      grid.setWalkableAt(x, y, true);
+    }
+  }
+
   map.items.forEach((item) => {
     if (item.walkable || item.wall) {
       return;
@@ -240,6 +245,16 @@ io.on('connection', (socket) => {
     character.position = from;
     character.path = path;
     io.emit("playerMove", character);
+  });
+
+  socket.on('itemsUpdate', (items) => {
+    map.items = items;
+    characters.forEach((character) => {
+      character.path = [];
+      character.position = generateRandomPosition();
+    });
+    updateGrid();
+    io.emit('mapUpdated', {map, characters});
   });
 
   socket.on('disconnect', () => {

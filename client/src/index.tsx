@@ -5,6 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { SocketProvider } from './contexts/SocketContext';
+import { BuildModeProvider } from './contexts/BuildModeContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,7 +13,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <SocketProvider url="http://localhost:3001">
-      <App />
+      <BuildModeProvider>
+        <App />
+      </BuildModeProvider>
     </SocketProvider>
   </React.StrictMode>
 );

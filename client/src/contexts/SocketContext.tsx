@@ -45,9 +45,15 @@ export const SocketProvider = ({ url, children }) => {
       });
     });
 
+    newSocket.on('mapUpdated', ({map, characters}) => {
+      setMap(map);
+      setCharacters(characters);
+    });
+
     return () => {
       newSocket.off('hello');
       newSocket.off('characters');
+      newSocket.off('mapUpdate');
       newSocket.off('playerMove');
       newSocket.disconnect();
     };
