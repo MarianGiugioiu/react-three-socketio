@@ -13,7 +13,8 @@ export interface IItem {
   gridPosition?: number[],
   rotation?: number,
   walkable?: boolean,
-  wall?: boolean
+  wall?: boolean,
+  tmp?: boolean
 }
 
 export interface IMap {

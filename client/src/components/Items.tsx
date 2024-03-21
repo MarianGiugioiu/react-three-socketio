@@ -1,10 +1,11 @@
 import { useCursor, useGLTF } from "@react-three/drei"
 import { IItem } from '../utils/interfaces';
 import { useSocket } from "../contexts/SocketContext";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SkeletonUtils } from "three-stdlib";
 import { useGrid } from "../hooks/useGrid";
 import { useBuildMode } from "../contexts/BuildModeContext";
+import { Mesh } from "three";
 
 export const Item = ({
   item,
@@ -15,7 +16,7 @@ export const Item = ({
   canDrop
 }) => {
   const socketContext = useSocket();
-  const {vector3ToGrid, gridToVector3} = useGrid();
+  const { gridToVector3 } = useGrid();
   const { name, gridPosition, size, rotation: itemRotation } = item;
   const {buildMode, setBuildMode, shopMode, setShopMode, draggedItem, setDraggedItem, draggedItemRotation, setDraggedItemRotation} = useBuildMode();
   const rotation = isDragging ? dragRotation: itemRotation;
@@ -25,6 +26,16 @@ export const Item = ({
   const height = rotation === 1 || rotation === 3 ? size[0] : size[1];
   const [hover, setHover] = useState(false);
   useCursor(buildMode ? hover : undefined);
+
+  useEffect(() => {
+    clone.traverse((child) => {
+      if ((child as Mesh).isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [])
+
   return (
     <group 
       onClick={onClick}

@@ -112,24 +112,24 @@ export function AnimatedWoman({
             <primitive object={nodes.Root} />
           </group>
           <group name="Casual_Body" rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-            <skinnedMesh name="Casual_Body_1" geometry={nodes.Casual_Body_1['geometry']} material={materials.White} skeleton={nodes.Casual_Body_1['skeleton']}>
+            <skinnedMesh name="Casual_Body_1" geometry={nodes.Casual_Body_1['geometry']} material={materials.White} skeleton={nodes.Casual_Body_1['skeleton']} castShadow>
               <meshStandardMaterial color={topColor}/>
             </skinnedMesh>
-            <skinnedMesh name="Casual_Body_2" geometry={nodes.Casual_Body_2['geometry']} material={materials.Skin} skeleton={nodes.Casual_Body_2['skeleton']} />
+            <skinnedMesh name="Casual_Body_2" geometry={nodes.Casual_Body_2['geometry']} material={materials.Skin} skeleton={nodes.Casual_Body_2['skeleton']} castShadow />
           </group>
           <group name="Casual_Feet" rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-            <skinnedMesh name="Casual_Feet_1" geometry={nodes.Casual_Feet_1['geometry']} material={materials.Skin} skeleton={nodes.Casual_Feet_1['skeleton']} />
-            <skinnedMesh name="Casual_Feet_2" geometry={nodes.Casual_Feet_2['geometry']} material={materials.Grey} skeleton={nodes.Casual_Feet_2['skeleton']} />
+            <skinnedMesh name="Casual_Feet_1" geometry={nodes.Casual_Feet_1['geometry']} material={materials.Skin} skeleton={nodes.Casual_Feet_1['skeleton']} castShadow />
+            <skinnedMesh name="Casual_Feet_2" geometry={nodes.Casual_Feet_2['geometry']} material={materials.Grey} skeleton={nodes.Casual_Feet_2['skeleton']} castShadow />
           </group>
           <group name="Casual_Head" rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-            <skinnedMesh name="Casual_Head_1" geometry={nodes.Casual_Head_1['geometry']} material={materials.Skin} skeleton={nodes.Casual_Head_1['skeleton']} />
-            <skinnedMesh name="Casual_Head_2" geometry={nodes.Casual_Head_2['geometry']} material={materials.Hair_Blond} skeleton={nodes.Casual_Head_2['skeleton']} >
+            <skinnedMesh name="Casual_Head_1" geometry={nodes.Casual_Head_1['geometry']} material={materials.Skin} skeleton={nodes.Casual_Head_1['skeleton']} castShadow />
+            <skinnedMesh name="Casual_Head_2" geometry={nodes.Casual_Head_2['geometry']} material={materials.Hair_Blond} skeleton={nodes.Casual_Head_2['skeleton']} castShadow >
               <meshStandardMaterial color={hairColor}/>
             </skinnedMesh>
-            <skinnedMesh name="Casual_Head_3" geometry={nodes.Casual_Head_3['geometry']} material={materials.Hair_Brown} skeleton={nodes.Casual_Head_3['skeleton']} />
-            <skinnedMesh name="Casual_Head_4" geometry={nodes.Casual_Head_4['geometry']} material={materials.Brown} skeleton={nodes.Casual_Head_4['skeleton']} />
+            <skinnedMesh name="Casual_Head_3" geometry={nodes.Casual_Head_3['geometry']} material={materials.Hair_Brown} skeleton={nodes.Casual_Head_3['skeleton']} castShadow />
+            <skinnedMesh name="Casual_Head_4" geometry={nodes.Casual_Head_4['geometry']} material={materials.Brown} skeleton={nodes.Casual_Head_4['skeleton']} castShadow />
           </group>
-          <skinnedMesh name="Casual_Legs" geometry={nodes.Casual_Legs['geometry']} material={materials.Orange} skeleton={nodes.Casual_Legs['skeleton']} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <skinnedMesh name="Casual_Legs" geometry={nodes.Casual_Legs['geometry']} material={materials.Orange} skeleton={nodes.Casual_Legs['skeleton']} castShadow rotation={[-Math.PI / 2, 0, 0]} scale={100}>
             <meshStandardMaterial color={bottomColor}/>
           </skinnedMesh>
         </group>

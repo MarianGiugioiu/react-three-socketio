@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { ICharacter, IMap } from '../utils/interfaces';
+import { ICharacter, IItem, IMap } from '../utils/interfaces';
 
 export interface SocketContext {
   socket: Socket,
   characters: ICharacter[],
   map: IMap,
-  user: string
+  user: string,
+  items: IItem[]
 }
 
 export const SocketContext = createContext<SocketContext | undefined>(undefined);
@@ -21,6 +22,7 @@ export const SocketProvider = ({ url, children }) => {
   const [characters, setCharacters] = useState<ICharacter[] | undefined>([]);
   const [map, setMap] = useState<IMap | undefined>({});
   const [user, setUser] = useState<string>(null);
+  const [items, setItems] = useState<IItem[] | undefined>([]);
 
   useEffect(() => {
     const newSocket = io(url);
@@ -29,6 +31,7 @@ export const SocketProvider = ({ url, children }) => {
       setMap(value.map);
       setUser(value.id);
       setCharacters(value.characters);
+      setItems(value.items)
     });
     newSocket.on('characters', (characters) => {
       setCharacters(characters);
@@ -59,5 +62,5 @@ export const SocketProvider = ({ url, children }) => {
     };
   }, [url]);
 
-  return <SocketContext.Provider value={{socket, characters, map, user}}>{children}</SocketContext.Provider>;
+  return <SocketContext.Provider value={{socket, characters, map, user, items}}>{children}</SocketContext.Provider>;
 };

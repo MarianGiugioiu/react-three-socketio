@@ -8,6 +8,7 @@ import { ICharacter, IItem } from "../utils/interfaces";
 import { useThree } from "@react-three/fiber";
 import { useGrid } from "../hooks/useGrid";
 import { useBuildMode } from "../contexts/BuildModeContext";
+import { Shop } from "./Shop";
 
 
 export const Experience = () => {
@@ -21,6 +22,8 @@ export const Experience = () => {
   useCursor(onFloor);
   const {vector3ToGrid, gridToVector3} = useGrid();
   const scene = useThree((state) => state.scene);
+  const controls = useRef();
+  const state = useThree((state) => state);
 
   const onPlaneClicked = (e) => {
     if (!buildMode) {
@@ -34,6 +37,7 @@ export const Experience = () => {
         if (canDrop) {
           setItems((prev) => {
             const newItems = [...prev];
+            delete newItems[draggedItem].tmp;
             newItems[draggedItem].gridPosition = vector3ToGrid(e.point);
             newItems[draggedItem].rotation = draggedItemRotation;
             return newItems;
@@ -44,13 +48,28 @@ export const Experience = () => {
     }
   }
 
+  const onItemSelected = (item) => {
+    setShopMode(false);
+    setItems((prev) => [
+      ...prev,
+      {
+        ...item,
+        gridPosition: [0, 0],
+        tmp: true
+      }
+    ]);
+
+    setDraggedItem(items.length);
+    setDraggedItemRotation(0);
+  }
+
   useEffect(() => {
     if (!draggedItem) {
       return;
     }
     const item = items[draggedItem];
-    const width = item.rotation === 1 || item.rotation === 3 ? item.size[1] : item.size[0];
-    const height = item.rotation === 1 || item.rotation === 3 ? item.size[0] : item.size[1];
+    const width = draggedItemRotation === 1 || draggedItemRotation === 3 ? item.size[1] : item.size[0];
+    const height = draggedItemRotation === 1 || draggedItemRotation === 3 ? item.size[0] : item.size[1];
 
     let droppable = true;
 
@@ -95,24 +114,35 @@ export const Experience = () => {
     }
 
     setCanDrop(droppable);
-  }, [dragPosition, draggedItem, items]);
+  }, [dragPosition, draggedItem, items, draggedItemRotation]);
 
-  const controls = useRef();
-  const state = useThree((state) => state);
+  useEffect(() => {
+    if (draggedItem === null) {
+      setItems((prev) => prev.filter((item) => !item.tmp));
+    }
+  }, [draggedItem])
 
   useEffect(() => {
     if (buildMode) {
       setItems(socketContext.map?.items || []);
       state.camera.position.set(8, 8, 8);
-      if (controls.current) {
-        (controls.current as any).target.set(0, 0, 0);
-      }
+      (controls.current as any).target.set(0, 0, 0);
     } else {
       if (socketContext.map.items) {
         socketContext.socket.emit('itemsUpdate', items)
       }
     }
   }, [buildMode]);
+
+  useEffect(() => {
+    if (shopMode) {
+      state.camera.position.set(0, 4, 10);
+      (controls.current as any).target.set(0, 0, 0);
+    } else {
+      state.camera.position.set(8, 8, 8);
+      (controls.current as any).target.set(0, 0, 0);
+    }
+  }, [shopMode]);
 
   useEffect(() => {
     if (socketContext.characters.length) {
@@ -125,13 +155,24 @@ export const Experience = () => {
       }
     }
   }, [socketContext]);
+  
   return (
     <>
       <Environment preset="sunset"/>
-      <ambientLight intensity={0.3} />
-      <OrbitControls ref={controls} minDistance={5} maxDistance={20} minPolarAngle={0} maxPolarAngle={Math.PI / 2} screenSpacePanning={false} />
+      <ambientLight intensity={0.1} />
+      <directionalLight position={[-4, 4, -4]} castShadow intensity={0.35} shadow-mapSize={[1024, 1024]}>
+        <orthographicCamera
+          attach={"shadow-camera"}
+          args={[-(socketContext.map.size?.[0] ?? 10), (socketContext.map.size?.[1] ?? 10), 10, -10]}
+          far={(socketContext.map.size?.[0] ?? 10) + (socketContext.map.size?.[1] ?? 10)}
+        />
+      </directionalLight>
+      <OrbitControls ref={controls} minDistance={5} maxDistance={20} minPolarAngle={0} maxPolarAngle={Math.PI / 2} screenSpacePanning={false} enableZoom={!shopMode}/>
       {
-        (buildMode ? items : socketContext.map.items)?.map((item, idx) => {
+        shopMode && <Shop onItemSelected={onItemSelected}/>
+      }
+      {
+        !shopMode && (buildMode ? items : socketContext.map.items)?.map((item, idx) => {
           return (
             <Item 
               key={`${item.name}-${idx}`}
@@ -150,29 +191,34 @@ export const Experience = () => {
           )
         })
       }
-      <mesh 
-        rotation-x={-Math.PI / 2}
-        position-y={-0.001}
-        onClick={onPlaneClicked}
-        onPointerEnter={() => setOnFloor(true)}
-        onPointerLeave={() => setOnFloor(false)}
-        onPointerMove={(e) => {
-          if(!buildMode) {
-            return;
-          }
-          const newPosition = vector3ToGrid(e.point);
-          if (!dragPosition || newPosition[0] !== dragPosition[0] || newPosition[1] !== dragPosition[1]
-          ) {
-            setDragPosition(newPosition);
-          }
-        }}
-        position-x={socketContext.map.size?.[0] / 2}
-        position-z={socketContext.map.size?.[1] / 2}
-      >
-        <planeGeometry args={[socketContext.map.size?.[0], socketContext.map.size?.[1]]}/>
-        <meshStandardMaterial color='#f0f0f0'/>
-      </mesh>
-      <Grid infiniteGrid fadeDistance={50} fadeStrength={5} />
+      {
+        !shopMode && <mesh 
+          rotation-x={-Math.PI / 2}
+          position-y={-0.001}
+          onClick={onPlaneClicked}
+          onPointerEnter={() => setOnFloor(true)}
+          onPointerLeave={() => setOnFloor(false)}
+          onPointerMove={(e) => {
+            if(!buildMode) {
+              return;
+            }
+            const newPosition = vector3ToGrid(e.point);
+            if (!dragPosition || newPosition[0] !== dragPosition[0] || newPosition[1] !== dragPosition[1]
+            ) {
+              setDragPosition(newPosition);
+            }
+          }}
+          position-x={socketContext.map.size?.[0] / 2}
+          position-z={socketContext.map.size?.[1] / 2}
+          receiveShadow
+        >
+          <planeGeometry args={[socketContext.map.size?.[0], socketContext.map.size?.[1]]}/>
+          <meshStandardMaterial color='#f0f0f0'/>
+        </mesh>
+      }
+      {
+        buildMode && !shopMode && <Grid infiniteGrid fadeDistance={50} fadeStrength={5} />
+      }
       {
         !buildMode && socketContext.characters.map((character: ICharacter) => (
           <AnimatedWoman 
